@@ -1,5 +1,8 @@
 package org.example;
 
+import org.example.exceptions.StringListNotFoundException;
+import org.example.exceptions.StringListNullPointerException;
+
 import java.util.*;
 
 public class StringListImpl implements StringList {
@@ -15,6 +18,11 @@ public class StringListImpl implements StringList {
 
     public StringListImpl() {
         this.stringList = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+    }
+
+    public StringListImpl(int size) {
+        this.size = size;
+        this.stringList = new String[size];
     }
 
     public String[] getStringList() {
@@ -96,7 +104,6 @@ public class StringListImpl implements StringList {
     @Override
     public String set(int index, String item) {
         Objects.checkIndex(index, size);
-        //String oldValue = stringList[index];
         stringList[index] = item;
 
         return item;
@@ -104,14 +111,41 @@ public class StringListImpl implements StringList {
 
     @Override
     public String remove(String item) {
-        return null;
+        final int size = this.size;
+        int i = 0;
+        found: {
+            if (item == null) {
+                for (; i < size; i++)
+                    if (stringList[i] == null)
+                        break found;
+            } else {
+                for (; i < size; i++)
+                    if (item.equals(stringList[i]))
+                        break found;
+            }
+            throw  new StringListNotFoundException("Element doesn't found");
+        }
+        String deletedItem = stringList[i];
+        fastRemove(stringList, i);
+
+        return deletedItem;
     }
 
     @Override
     public String remove(int index) {
-        return null;
+        Objects.checkIndex(index, size);
+        String item = stringList[index];
+        fastRemove(stringList, index);
+
+        return item;
     }
 
+    private void fastRemove(String[] stringList, int i) {
+        final int newSize;
+        if ((newSize = size - 1) > i)
+            System.arraycopy(stringList, i + 1, stringList, i, newSize - i);
+        stringList[size = newSize] = null;
+    }
     @Override
     public boolean contains(String item) {
         return indexOf(item) >= 0;
@@ -169,7 +203,19 @@ public class StringListImpl implements StringList {
 
     @Override
     public boolean equals(StringList otherList) {
-        return false;
+
+        if(otherList == null)
+            throw new StringListNullPointerException("StringList is NULL");
+        boolean equal = false;
+        if (equal = (this.size == otherList.size()))
+            for (int i = 0; i < this.size; i++) {
+                if (!Objects.equals(stringList[i], otherList.get(i))) {
+                    equal = false;
+                    break;
+                }
+            }
+
+        return equal;
     }
 
     @Override
@@ -199,4 +245,5 @@ public class StringListImpl implements StringList {
                 ", size=" + size +
                 '}';
     }
+
 }
